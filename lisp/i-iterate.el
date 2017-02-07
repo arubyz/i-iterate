@@ -1,7 +1,8 @@
-;; Commentary:
+;;; i-iterate.el --- Enhanced iteration macro
 
-;; ------------------------------------------------------------------------
 ;; Copyright (C) Oleg Sivokon (olegsivokon@gmail.com)
+
+;;; Commentary:
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
