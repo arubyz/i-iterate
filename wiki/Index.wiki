@@ -1,0 +1,5 @@
+#summary i-iterate Emacs Lisp library
+
+= Developers' documentation =
+
+Can be found here: [Iterate]

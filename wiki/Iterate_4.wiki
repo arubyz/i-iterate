@@ -1,0 +1,141 @@
+|| [[Iterate_3#finally  < ]] || [[#across-reverse-binary  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[Iterate_1#Drivers  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+== 1.3 Multi-purpose driver ==
+
+This driver can perform many different task. Each of these tasks usually has it’s own continuation. Below is the list of the existing (or planned) continuations. For examples of how to implement your own continuation see
+
+Macro: *i-add-for-handler*_ name arguments &amp;optional driver_
+
+&amp;rest handler [doc-string]
+
+*For continuations*
+
+|| [#across-reverse-binary • across reverse binary] ||  || Iterates over arrays. ||
+|| [#chars-words-lines • chars words lines] ||  || Iterates over entities in buffer. ||
+|| [#depth_002dfirst-breadth_002dfirst • depth-first breadth-first] ||  || Iterates over trees. ||
+|| [#dot_002dproduct-join-distinct • dot-product join distinct] ||  || Iterates over sets. ||
+|| [#in-on • in on] ||  || Iterates over lists. ||
+|| [#keys-values-pairs • keys values pairs] ||  || Iterates over hash-tables. ||
+|| [#permutations • permutations] ||  || Generates permutation of an array. ||
+|| [#random • random] ||  || Produces unique random each iteration. ||
+|| [#upfrom-from-downfrom • upfrom from downfrom] ||  || Iterates numerically. ||
+
+----
+
+|| [[#for  < ]] || [[#chars-words-lines  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.1 Iterate over arrays ===
+
+This continuation can take following forms: `(for VARIABLES across|reverse|binary ARRAY)`, where VARIABLES can be a symbol or a list of symbols. In the later case, subsequent symbols are taken to mean array dimensions. I.e. if the VARIABLES is (A B), then the array is assumed to have at least two dimensions, and the code generated will attempt to iterate over the second dimension too. In the later case, other body expression are run inside the innermost loop.
+
+`reverse` and `binary` are not implemented yet.
+
+||  || {{{ (++ (for i across [1 2 3 4]) (message "i: %d" i)) }}} ||
+
+This example will iterate over the elements of `[1 2 3 4]` array and print them.
+
+----
+
+|| [[#across-reverse-binary  < ]] || [[#depth_002dfirst-breadth_002dfirst  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.2 Iterate over characters, words or lines in a buffer ===
+
+This continuation iterates over characters, words or lines using Emacs navigation commands, `forward-char`, `forward-word` and `forward-line`. You can also set the buffer, where the iteration takes place. It acts similar to `with-current-buffer` macro. This continuation uses syntax: `(for VARIABLE chars|words|lines [in BUFFER])`, where VARIABLE is set to the next character, word or line of the BUFFER.
+
+||  || {{{ (++ (for i words in "*scratch*")   (message "i: %s" i)) }}} ||
+
+This example will switch to the “*scratch*” buffer and will then print every word from the current point position and until the end of the buffer.
+
+----
+
+|| [[#chars-words-lines  < ]] || [[#dot_002dproduct-join-distinct  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.3 Iterate over trees ===
+
+As the name suggests, these drivers iterate over trees in either depth-first or breadth-first order (both happen linearly, no recursion involved). These drivers use syntax: `(for VARIABLE depth-first|breadth-first TREE)`. The VARIABLE is set to leafs only in either case.
+
+||  || {{{ (++ (for i depth-first          '((1 (2 3) ((4) 5) ((((6 7 8))) 9 10 (11)))))   (message "i: %s" i)) }}} ||
+
+This example will print “i: 1, i: 2, i: 3, i: 4, i: 5, i: 6, i: 7, i: 8, i: 9, i: 10, i: 11”.
+
+----
+
+|| [[#depth_002dfirst-breadth_002dfirst  < ]] || [[#in-on  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.4 Iterate over sets ===
+
+These continuations aren’t implemented yet.
+
+----
+
+|| [[#dot_002dproduct-join-distinct  < ]] || [[#keys-values-pairs  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.5 Iterates over lists ===
+
+This for continuation uses the syntax `(for VARIABLES in|on [by ITERATOR])` `VARIABLES` are interpreted as follows: If it is a symbol, it names a variable, if the continuation is `in`, then it points to `car` of the list cell being iterated, it points to the list itself otherwise.
+
+If it is a proper list and the continuation is `in`, then it is a list of variables, which are bound to the `car`s of the lists that constitute the list being iterated, otherwise they point to subsequent cells of the list being iterated.
+
+If it is a cons cell with non-nil `cdr` cell and the continuation is `in`, then it is bound to `car` and `cdr` of the cells of the list being iterated, otherwise it is bound to the cell being iterated and the rest of the list.
+
+If ITERATOR is not nil, then it is taken to be a function that must be applied to the list being iterated to obtain the pointer to the next cell.
+
+||  || {{{ (++ (for i on '(1 2 3 4) by #'cddr)   (when (oddp (car i))     (return (* (car i) 7)))) }}} ||
+
+This example will set `i` to (1 2 3 4), (2 3 4), (3 4), (4) in turns, and if the value of `(car i)` happens to be odd, will terminate the iteration and return that value multiplied by 7. Since 1 is odd, the value returned is 7.
+
+----
+
+|| [[#in-on  < ]] || [[#permutations  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.6 Iterate over hash-table ===
+
+This driver iterates over hash-table, it is possible to iterate only over the keys, the values, or both. The syntax used is: `(for VARIABLES keys|values|pairs HASH-TABLE)`, where VARIABLES can be either a symbol, in which case it will be set to whichever continuation you choose, or a list of two symbols. In the later case, the first element of the list is taken to be the variable for keys, and the second is the variable for values.
+
+||  || {{{ (++ (for (a b) pairs test-hash limit 100)   (collect (cons a b))   (message "a: %s, b: %s" a b)) }}} ||
+
+This example will iterate over a hash-table `test-hash` and collect its keys into an alist, with keys being the in the `car` position and values being in `cdr` position.
+
+----
+
+|| [[#keys-values-pairs  < ]] || [[#random  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.7 Produce permutations of an array ===
+
+This continuation will produce all permutations (without repeating them) of an array by swapping array elements. This continuation uses syntax: `(for VARIABLE permutations ARRAY [algo ALGORITHM])`, where VARIABLE is set to ARRAY. ARRAY is updated on every iteration and, optionally, you can choose an algorithm. The default algorithm used is the “quickperm”, borrowed from http://www.quickperm.org/ Which is a simpler and a more efficient one. And a “johnson-trotter” algorithm, borrowed from http://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm. The distinction is that the later one will swap adjacent elements while the former will swap any two elements each iteration.
+
+Please note that the syntax of this continuation will probably change in the future.
+
+||  || {{{ (++ (for a permutations [1 2 3 4])   (message "array: %s" a)) }}} ||
+
+This example will generate all 24 permutations of the `[1 2 3 4]` array.
+
+----
+
+|| [[#permutations  < ]] || [[#upfrom-from-downfrom  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.8 Generate N unique random numbers ===
+
+This continuation will generate unique random numbers during iteration, it uses syntax: `(for VARIABLE random LOW to HIGH)`, where VARIABLE is the variable that will be set to the next random number, LOW is the lower bound and HIGH is the higher bound of the numbers being generated.
+
+||  || {{{ (++ (with ((s (make-string 90 ?-))))   (for i random 10 to 100)   (aset s (- i 10) ?x)   (message "%s" s)) }}} ||
+
+This example will print 90 lines 90 characters long, originally containing only “-” characters, but being randomly replaced by “x” character. The last line should be entirely replaced with “x” characters.
+
+----
+
+|| [[#random  < ]] || [[Iterate_5#generate  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||  ||  ||  ||  || [[Iterate#Top Top]] || [[Iterate_toc#SEC_Contents Contents]] || [Index] || [[Iterate_abt#SEC_About  ? ]] ||
+
+=== 1.3.9 Numerical iteration ===
+
+This continuation uses this syntax: `(for VARIABLE from|downfrom|upfrom [to|upto|below LIMIT [by STEP]])`. Where VARIABLE is a variable set to the subsequent products of the iteration. `from` and `upfrom` are synonymous. If you use `from` with no further arguments, then the default is to iterate by one upwards, and if you use `downfrom` with no arguments, then the default is to decrease the variable by one at each step. `to` implies that the LIMIT is inclusive and must happen during the iteration, `upto` implies that only the values strictly less then LIMIT can happen during iteration, `below` implies that the values below the limit as well as the limit itself will happen during the iteration.
+
+||  || {{{ (++ (for i from 0 to 10) (message "i: %s" i)) }}} ||
+
+This example will iterate over values 0..10 inclusive and print them
+
+----
+
+|| [[#random  < ]] || [[Iterate_5#generate  > ]] ||  || [[Iterate_1#Drivers  << ]] || [[#for  Up ]] || [[Iterate_8#Keywords  >> ]] ||
+
+This document was generated by _wvxvw_ on _December 12, 2012_ using [http://www.nongnu.org/texi2html/ _texi2html 1.82_].
